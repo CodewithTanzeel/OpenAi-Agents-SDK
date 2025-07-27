@@ -1,6 +1,52 @@
-def main():
-    print("Hello from 05!")
+# Import necessary classes and functions from the agents package
+from agents import Runner, Agent, OpenAIChatCompletionsModel, AsyncOpenAI, RunConfig
+# Import standard and third-party libraries
+import os 
+from dotenv import load_dotenv
+import asyncio
+import chainlit as cl
 
+# Load environment variables from a .env file
+load_dotenv()
 
-if __name__ == "__main__":
-    main()
+# Retrieve the Gemini API key from environment variables
+# Make sure you have GEMINI_API_KEY set in your .env file
+gemini_api_key = os.getenv("GEMINI_API_KEY")
+
+# Initialize the external OpenAI-compatible client for Gemini
+external_client: AsyncOpenAI = AsyncOpenAI(
+    api_key=gemini_api_key,
+    base_url="https://generativelanguage.googleapis.com/v1beta/openai/",  # Gemini API endpoint
+)
+
+# Define the chat model using the Gemini model via the OpenAI-compatible interface
+model: OpenAIChatCompletionsModel = OpenAIChatCompletionsModel(
+    model="gemini-2.5-flash",
+    openai_client=external_client)
+
+# Set up the run configuration for the agent
+config = RunConfig(
+    model=model,
+    model_provider=external_client,
+    tracing_disabled=True,  # Disable tracing for this run
+)
+
+# Create an agent with a name and instructions for its behavior
+agent = Agent(
+    name = "ExpertProgrammer",
+    instructions="Give Expert programming advices and Code Suggestions",
+    model=model
+)
+
+# Define the message handler for Chainlit
+@cl.on_message
+async def handle_message(message: cl.Message):
+    # Run the agent with the user's input and configuration
+    result = await Runner.run(
+        agent,
+        input=message.content,
+        run_config=config
+    )
+    # Send the agent's final output as a response message
+    await cl.Message(content=result.final_output).send()
+
