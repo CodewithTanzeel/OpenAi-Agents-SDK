@@ -9,9 +9,8 @@ import os
 import openai
 from langsmith.wrappers import wrap_openai
 from langsmith import traceable
-import requests
 import random
-
+import requests
 
 load_dotenv()
 
@@ -70,7 +69,7 @@ async def main():
     )
     result = await Runner.run(
         agent,
-        input="Please provide a weather report for Karachi and Tell me a joke",# try your own prompt and trace it
+        input="Tell me a joke. ",
     )
 
     print(result.final_output)
