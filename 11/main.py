@@ -1,19 +1,22 @@
+import os
+import asyncio
+from agents import Agent, Runner, AsyncOpenAI,set_trace_processors,OpenAIChatCompletionsModel, RunConfig, function_tool
+from langsmith.wrappers import OpenAIAgentsTracingProcessor
+# import agentops
+from pydantic import BaseModel
+from dotenv import load_dotenv
+import os
 import openai
 from langsmith.wrappers import wrap_openai
 from langsmith import traceable
-from agents import Agent, Runner, OpenAIChatCompletionsModel, AsyncOpenAI,function_tool
-import os
-from dotenv import load_dotenv
-import requests
-import random
-import asyncio
+
 
 load_dotenv()
 
 
 
 gemini_api_key = os.getenv("GEMINI_API_KEY")
-LANGSMITH_API_KEYd = os.getenv("LANGCHAIN_API_KEY")
+LANGSMITH_API_KEY = os.getenv("LANGSMITH_API_KEY")
 
 
 
@@ -23,7 +26,7 @@ provider = AsyncOpenAI(
 )
 
 model = OpenAIChatCompletionsModel(
-    model="gemini-2.5-flash",
+    model="gemini-2.0-flash",
     openai_client=provider
 )
 
@@ -71,5 +74,5 @@ async def main():
     print(result.final_output)
 
 if __name__ == "__main__":
-
+    set_trace_processors([OpenAIAgentsTracingProcessor()])
     asyncio.run(main())
