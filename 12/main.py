@@ -12,6 +12,7 @@ from langsmith import traceable
 import random
 import requests
 
+
 load_dotenv()
 
 
@@ -30,46 +31,62 @@ model = OpenAIChatCompletionsModel(
     model="gemini-2.0-flash",
     openai_client=provider
 )
+# ========== Web Search Agent ==========
+web_search_agent = Agent(
+    name="WebSearchAgent",
+    instructions="You are a tool that performs a web search and returns useful content for the query.",
+    model=model,
+    # tools=[WebSearchTool()]
+)
 
-@function_tool
-def how_many_jokes():
-    """
-    Get Random Number for jokes
-    """
-    return random.randint(1, 10)
 
-@function_tool
-def get_weather(city: str) -> str:
-    """
-    Get the weather for a given city
-    """
-    try:
-        result = requests.get(
-            f"http://api.weatherapi.com/v1/current.json?key=8e3aca2b91dc4342a1162608252604&q={city}"
-        )
+web_search_agent_as_tool = web_search_agent.as_tool(
+    tool_name="WebSearchAgent",
+    tool_description="You are a tool that performs a web search and returns useful content for the query.",
+)
 
-        data = result.json()
+# ========== Data Analysis Agent ==========
+data_analysis_agent = Agent(
+    name="DataAnalysisAgent",
+    instructions="You are a tool that analyzes data related to the given topic and provides key insights.",
+    model=model,
+)
 
-        return f"The current weather in {city} is {data["current"]["temp_c"]}C with {data["current"]["condition"]["text"]}."
-    
-    except Exception as e :
-        return f"Could not fetch weather data due to {e}"
 
+data_analysis_agent_as_tool = data_analysis_agent.as_tool(
+    tool_name="DataAnalysisAgent",
+    tool_description="You are a tool that analyzes climate-related data and provides key insights.",
+)
+
+# ========== Writer Agent ==========
+writer_agent = Agent(
+    name="WriterAgent",
+    instructions="You write a formal and detailed report based on the given insights for the user's topic.",
+    model=model,
+)
+
+writer_agent_as_tool = writer_agent.as_tool(
+    tool_name="WriterAgent",
+    tool_description="You are a tool that writes a full report based on climate analysis insights. Be formal and detailed."
+)
 
 @traceable
 async def main():
-    agent = Agent(
-        name="Assistant",
-        instructions="""
-                if the user asks for jokes, first call 'how_many_jokes' function, then tell that jokess with numbers.
-                if the user asks for weather, call the 'get_weather' funciton with city name
-            """,
-            model=model,
-            tools=[get_weather, how_many_jokes]
-    )
+    main_agent = Agent(
+          name="LLM Orchestrator",
+          instructions="""
+                You are an intelligent orchestrator agent.
+                1. Use 'WebSearchAgent' to gather information about the topic the user requested.
+                2. Send that information to 'DataAnalysisAgent' to generate insights.
+                3. Pass those insights to 'WriterAgent' to generate a final report.
+                Be sure to follow the user's topic exactly and not assume it is climate-related.
+        """,
+         model=model,
+         tools=[web_search_agent_as_tool, data_analysis_agent_as_tool, writer_agent_as_tool]
+   )
     result = await Runner.run(
-        agent,
-        input="Tell me a joke. ",
+            main_agent,
+            input="tell me stats of population in karachi. ",
     )
 
     print(result.final_output)
