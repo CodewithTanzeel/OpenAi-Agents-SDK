@@ -1,0 +1,12 @@
+[project]
+name = "15"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "chainlit>=2.6.4",
+    "langsmith>=0.4.9",
+    "openai-agents>=0.2.4",
+    "python-dotenv>=1.1.1",
+]
