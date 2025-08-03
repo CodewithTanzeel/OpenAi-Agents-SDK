@@ -4,7 +4,6 @@ from dotenv import load_dotenv
 
 from agents import (
     Agent,
-    ItemHelpers,
     Runner,
     set_trace_processors,
     AsyncOpenAI,
@@ -45,26 +44,31 @@ report_generator = Agent(
 )
 
 
-
-
 @traceable
 async def process_code_snippet():
-    print("⏳ Step 1: Summarizing code...")
-    summary_result = await Runner.run(
-        code_summarizer, "def greet(name): return f'Hello, {name}!'"
+    async def run_agent(label, agent, input_data):
+        print(f"{label}...")
+        result = await Runner.run(agent, input_data)
+
+        # DEBUG: Print what each item contains
+        for i, item in enumerate(result.new_items):
+            print(f"🔍 Raw item {i+1} type: {type(item)}, content: {item}")
+
+        # Join raw str(item) if text/content attributes don't exist
+        output = "\n".join(str(item) for item in result.new_items)
+        print(output)
+        return output
+
+    code = "def greet(name): return f'Hello, {name}!'"
+
+    summary_text = await run_agent("⏳ Step 1: Summarizing code", code_summarizer, code)
+    translated_text = await run_agent(
+        "🌐 Step 2: Translating summary to Urdu", translator_agent, summary_text
     )
-    summary_text = "\n".join(item.content for item in summary_result.new_items)
-    print("📝 Code Summary:\n", summary_text)
-
-    print("🌐 Step 2: Translating summary to Urdu...")
-    translation_result = await Runner.run(translator_agent, summary_text)
-    translated_text = "\n".join(item.content for item in translation_result.new_items)
-    print("🌍 Urdu Translation:\n", translated_text)
-
-    print("🗂️ Step 3: Generating final report...")
-    report_result = await Runner.run(report_generator, translated_text)
-    final_report = "\n".join(item.content for item in report_result.new_items)
-    print("✅ Final Report:\n", final_report)
+    await run_agent(
+        "🗂️ Step 3: Generating final report", report_generator, translated_text
+    )
+    
 
 
 if __name__ == "__main__":
