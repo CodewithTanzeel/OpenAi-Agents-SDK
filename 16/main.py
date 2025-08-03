@@ -6,7 +6,6 @@ from agents import (
     Agent,
     ItemHelpers,
     Runner,
-    trace,
     set_trace_processors,
     AsyncOpenAI,
     OpenAIChatCompletionsModel,
@@ -46,30 +45,28 @@ report_generator = Agent(
 )
 
 
+
+
 @traceable
-async def process_code_snippet(code_snippet: str):
+async def process_code_snippet():
     print("⏳ Step 1: Summarizing code...")
-    # Step 1: Summarize
-    summary_result = await Runner.run(code_summarizer, code_snippet)
-    summary_text = ItemHelpers.text_message_outputs(summary_result.new_items)
+    summary_result = await Runner.run(
+        code_summarizer, "def greet(name): return f'Hello, {name}!'"
+    )
+    summary_text = "\n".join(item.content for item in summary_result.new_items)
     print("📝 Code Summary:\n", summary_text)
 
-    # Step 2: Translate
     print("🌐 Step 2: Translating summary to Urdu...")
     translation_result = await Runner.run(translator_agent, summary_text)
-    translated_text = ItemHelpers.text_message_outputs(translation_result.new_items)
+    translated_text = "\n".join(item.content for item in translation_result.new_items)
     print("🌍 Urdu Translation:\n", translated_text)
 
-    # Step 3: Final Report
     print("🗂️ Step 3: Generating final report...")
     report_result = await Runner.run(report_generator, translated_text)
-    final_report = ItemHelpers.text_message_outputs(report_result.new_items)
-
+    final_report = "\n".join(item.content for item in report_result.new_items)
     print("✅ Final Report:\n", final_report)
 
 
-# Example call
 if __name__ == "__main__":
-    sample_code = "def greet(name): return f'Hello, {name}!'"
-    asyncio.run(process_code_snippet(sample_code))
+    asyncio.run(process_code_snippet())
     set_trace_processors([OpenAIAgentsTracingProcessor()])
