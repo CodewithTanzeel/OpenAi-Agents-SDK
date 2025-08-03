@@ -1,7 +1,3 @@
-import asyncio
-import os
-from dotenv import load_dotenv
-
 from agents import (
     Agent,
     Runner,
@@ -9,10 +5,14 @@ from agents import (
     AsyncOpenAI,
     OpenAIChatCompletionsModel,
 )
-from langsmith.wrappers import OpenAIAgentsTracingProcessor
+import os
+import asyncio
+from dotenv import load_dotenv
 from langsmith import traceable
+from langsmith.wrappers import OpenAIAgentsTracingProcessor
 
 load_dotenv()
+
 LANGSMITH_API_KEY = os.getenv("LANGSMITH_API_KEY")
 gemini_api_key = os.getenv("GEMINI_API_KEY")
 
