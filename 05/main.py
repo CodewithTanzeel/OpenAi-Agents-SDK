@@ -10,7 +10,7 @@ import chainlit as cl
 load_dotenv()
 
 # Retrieve the Gemini API key from environment variables
-# Make sure you have GEMINI_API_KEY set in your .env file
+# Make sure you have GEMINI_API_KEY set in your .env fileJ
 gemini_api_key = os.getenv("GEMINI_API_KEY")
 
 # Initialize the external OpenAI-compatible client for Gemini
